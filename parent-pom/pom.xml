@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>
+		<groupId>4e0798ad-d10a-4e83-989b-e88b85f75b9f</groupId>
+		<artifactId>root-parent-pom</artifactId>
+		<version>1.0.0</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+	
+	<groupId>4e0798ad-d10a-4e83-989b-e88b85f75b9f</groupId>
+	<artifactId>parent-pom</artifactId>
+	<version>1.0.0</version>
+	<packaging>pom</packaging>
+	
+	<name>parent-pom</name>
+	
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<app.semver>4.4.0</app.semver>
+		<app.runtime>4.4.0-20211227</app.runtime>
+		<mule.maven.plugin.version>3.8.2</mule.maven.plugin.version>
+		<app.env>${env}</app.env>
+		<app.prefix>${app.env}-</app.prefix>
+		<app.suffix>-ja</app.suffix>
+	</properties>
+	
+	<profiles>
+        <!-- Profile for production -->
+        <profile>
+            <id>production</id>
+            <activation>
+                <property>
+                    <name>env</name>
+                    <value>prd</value>
+                </property>
+            </activation>
+            <properties>
+                <app.name>${project.artifactId}${app.suffix}</app.name>
+            </properties>
+        </profile>
+
+        <!-- Profile for non-production -->
+        <profile>
+            <id>non-production</id>
+            <activation>
+                <property>
+                    <name>!env</name>
+                    <value>prd</value>
+                </property>
+            </activation>
+            <properties>
+                <app.name>${app.prefix}${project.artifactId}${app.suffix}</app.name>
+            </properties>
+        </profile>
+		<profile>
+            <id>nexus</id>
+            <distributionManagement>
+                <repository>
+                    <id>nexus-release</id>
+                    <url>http://localhost:8081/repository/maven-nexus-repo/</url>
+                </repository>
+            </distributionManagement>
+        </profile>
+    </profiles>
+	
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-resources-plugin</artifactId>
+					<configuration>
+						<resources>
+							<resource>
+								<directory>src/main/resources</directory>
+								<filtering>false</filtering>
+							</resource>
+							<resource>
+								<directory>src/main/resources</directory>
+								<filtering>true</filtering>
+								<includes>
+									<include>properties.yaml</include>
+								</includes>
+							</resource>
+						</resources>
+						<!-- <nonFilteredFileExtensions> <nonFilteredFileExtension>.yaml</nonFilteredFileExtension> 
+						</nonFilteredFileExtensions> -->
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-clean-plugin</artifactId>
+				</plugin>
+				<plugin>
+					<groupId>org.mule.tools.maven</groupId>
+					<artifactId>mule-maven-plugin</artifactId>
+					<version>${mule.maven.plugin.version}</version>
+					<extensions>true</extensions>
+					<configuration>
+						<cloudhub2Deployment>
+							<uri>https://anypoint.mulesoft.com</uri>
+							<provider>MC</provider>
+							<environment>${app.environment}</environment> <!-- Development -->
+							<target>${app.target}</target> <!-- private-alias -->
+							<muleVersion>4.4.0</muleVersion>
+							<server>anypoint-exchange-v3</server>
+							<applicationName>${app.name}</applicationName> <!-- jenkins-integration-mulesoft -->
+							<replicas>${app.replicas}</replicas> <!-- 1 -->
+							<vCores>${app.vcores}</vCores> <!-- 0.1 -->
+							<businessGroupId>4e0798ad-d10a-4e83-989b-e88b85f75b9f</businessGroupId>
+							<integrations>
+								<services>
+									<objectStoreV2>
+										<enabled>true</enabled>
+									</objectStoreV2>
+								</services>
+							</integrations>
+							<secureProperties>
+								<secret-key>${secret.key}</secret-key> <!-- m!zP6@u*od%n58+g -->
+								<anypoint.platform.client_id>${app.env.client_id}</anypoint.platform.client_id> <!-- 985108db05fd4dd3bb98e9525a764125 -->
+								<anypoint.platform.client_secret>${app.env.client_secret}</anypoint.platform.client_secret> <!-- 5cF54FE0c9914f9b920c4A9c552E9c56 -->
+							</secureProperties>
+							<properties>
+								<!-- <api.id>${app.api.id}</api.id> -->
+								<env>${app.env}</env>
+								<anypoint.platform.config.analytics.agent.enabled>true</anypoint.platform.config.analytics.agent.enabled>
+								<anypoint.platform.visualizer.displayName>${project.artifactId}</anypoint.platform.visualizer.displayName>
+								<anypoint.platform.visualizer.layer>${api.visualizer.layer}</anypoint.platform.visualizer.layer>
+								<anypoint.platform.base_uri>https://anypoint.mulesoft.com</anypoint.platform.base_uri>
+								<anypoint.platform.analytics_base_uri>https://analytics-ingest.anypoint.mulesoft.com</anypoint.platform.analytics_base_uri>
+							</properties>
+							<scopeLoggingConfigurations>
+								<scopeLoggingConfiguration>
+									<scope>org.mule.runtime.core.internal.processor.LoggerMessageProcessor</scope>
+									<logLevel>DEBUG</logLevel>
+								</scopeLoggingConfiguration>
+							</scopeLoggingConfigurations>
+							<deploymentSettings>
+								<http>
+									<inbound>
+										<forwardSslSession>true</forwardSslSession>
+										<lastMileSecurity>true</lastMileSecurity>
+									</inbound>
+								</http>
+								<generateDefaultPublicUrl>true</generateDefaultPublicUrl>
+							</deploymentSettings>
+						</cloudhub2Deployment>
+						<classifier>mule-application</classifier>
+					</configuration>
+				</plugin>
+				<!-- Maven Release Plugin -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-release-plugin</artifactId>
+					<configuration>
+						<!--<tagNameFormat>@{project.version}</tagNameFormat>
+					<releaseVersion>1.0.0</releaseVersion>
+					<developmentVersion>1.0.1-SNAPSHOT</developmentVersion>
+					<autoVersionSubmodules>true</autoVersionSubmodules> -->
+					</configuration>
+				</plugin>
+				<!-- Unit Testing Plugin 
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.22.2</version>
+				<configuration>
+
+					<includes>
+						<include>**/*Test.java</include>
+					</includes>
+				</configuration>
+			</plugin> -->
+				<!-- Integration Testing Plugin -->
+				<!--	<plugin>
+			  <groupId>org.apache.maven.plugins</groupId>
+			  <artifactId>maven-failsafe-plugin</artifactId>
+			  <version>2.22.2</version>
+			  <executions>
+				<execution>
+				  <goals>
+					<goal>integration-test</goal>
+					<goal>verify</goal>
+				  </goals>
+				</execution>
+			  </executions>
+			</plugin> -->
+			</plugins>
+		</pluginManagement>
+	</build>
+	
+	<repositories>
+		<repository>
+			<id>anypoint-exchange-v3</id>
+			<name>Anypoint Exchange</name>
+			<url>https://maven.anypoint.mulesoft.com/api/v3/maven</url>
+			<layout>default</layout>
+		</repository>
+		<repository>
+			<id>mulesoft-releases</id>
+			<name>MuleSoft Releases Repository</name>
+			<url>https://repository.mulesoft.org/releases/</url>
+			<layout>default</layout>
+		</repository>
+	</repositories>
+	
+	<pluginRepositories>
+		<pluginRepository>
+			<id>mulesoft-releases</id>
+			<name>MuleSoft Releases Repository</name>
+			<layout>default</layout>
+			<url>https://repository.mulesoft.org/releases/</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</pluginRepository>
+	</pluginRepositories>
+	
+	<distributionManagement>
+		<repository>
+			<id>anypoint-exchange-v3</id>
+			<name>Corporate Repository</name>
+			<url>https://maven.anypoint.mulesoft.com/api/v3/organizations/4e0798ad-d10a-4e83-989b-e88b85f75b9f/maven</url>
+			<layout>default</layout>
+		</repository>
+	</distributionManagement>
+	
+</project>
