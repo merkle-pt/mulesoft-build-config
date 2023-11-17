@@ -41,7 +41,6 @@
                 <app.name>${project.artifactId}${app.suffix}</app.name>
             </properties>
         </profile>
-
         <!-- Profile for non-production -->
         <profile>
             <id>non-production</id>
@@ -55,11 +54,12 @@
                 <app.name>${app.prefix}${project.artifactId}${app.suffix}</app.name>
             </properties>
         </profile>
+		
 		<profile>
-            <id>nexus</id>
+            <id>maven-nexus-repo</id>
             <distributionManagement>
                 <repository>
-                    <id>nexus-release</id>
+                    <id>maven-nexus-repo</id>
                     <url>http://localhost:8081/repository/maven-nexus-repo/</url>
                 </repository>
             </distributionManagement>
